@@ -196,18 +196,17 @@ int main(void)
             UART_Debug_PutString("Error occurred during I2C comm to read control register4\r\n");   
         }
     }
-          
-    isr_MultiRead_StartEx(Custom_isr_MultiRead);
-    Timer_MultiRead_Start();
     
     DataBuffer[0] = 0xA0;
     DataBuffer[TRANSMIT_BUFFER_SIZE-1] = 0xC0;
-          
+    
+    Timer_MultiRead_Start();      
+    isr_MultiRead_StartEx(Custom_isr_MultiRead);
+         
     for(;;)
     {
 
     }
 }
-
 
 /* [] END OF FILE */

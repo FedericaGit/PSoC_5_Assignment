@@ -40,8 +40,9 @@ CY_ISR(Custom_isr_MultiRead)
                  for (int i=0; i < OUT_REG_NUMBER; i += 2)
                 {
                     OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>6; 
-                    DataBuffer[i+1] = (uint8_t)(OutAxis & 0xFF);
-                    DataBuffer[i+2] = (uint8_t)(OutAxis >> 8);
+                    OutAxis *= 4;
+                    DataBuffer[i+1] = (uint8_t)(OutAxis >> 8);
+                    DataBuffer[i+2] = (uint8_t)(OutAxis & 0xFF);
                 }
             UART_Debug_PutArray(DataBuffer, TRANSMIT_BUFFER_SIZE);
             }
