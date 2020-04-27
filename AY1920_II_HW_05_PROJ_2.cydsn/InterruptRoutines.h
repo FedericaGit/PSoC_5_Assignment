@@ -13,6 +13,7 @@
 #ifndef _INTERRUPT_ROUTINES_H
     #define _INTERRUPT_ROUTINES_H
     
+    //number of registers we want to read (2 registers per each axis)
     #define OUT_REG_NUMBER 6         
     //total number of bytes we want to sent through the UART (header + axis values bytes + footer)
     #define TRANSMIT_BUFFER_SIZE 1+ OUT_REG_NUMBER +1 
@@ -23,10 +24,10 @@
 
     CY_ISR_PROTO(Custom_isr_MultiRead);
     
-    char message[50];                       // String to print out messages on the UART
-    uint8_t AxisData[OUT_REG_NUMBER];       //axis acceleration output data
+    volatile uint8 ReadPacketFlag;
+    uint8_t AxisData[OUT_REG_NUMBER];         //axis acceleration output data
     uint8_t DataBuffer[TRANSMIT_BUFFER_SIZE]; //buffer containing all the 3 axis outputs + header and footer
-    int16_t OutAxis;                        //right justified output casted at 16 bit
+    int16_t OutAxis;                          //right justified output casted at 16 bit
     
 #endif    
 
