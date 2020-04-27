@@ -11,7 +11,25 @@
 #include "stdio.h"
 #include "InterruptRoutines.h"
 
+/**
+*   \brief Address of the Status register
+*/
+#define LIS3DH_STATUS_REG 0x27
 
+/**
+*   \brief 7-bit I2C address of the slave device.
+*/
+#define LIS3DH_DEVICE_ADDRESS 0x18
+
+/**
+*   \brief Address of the output lower register of the x axis. 
+*   
+*   the higher register of x axis and the higher and lower registers 
+*   of the y and z axis are adiacent to this one
+*/
+#define LIS3DH_OUT_X_L 0x28 
+
+//total number of output registers for the 3 axis
 /**
 *   \brief Address of the WHO AM I register
 */
@@ -26,11 +44,6 @@
 *   \brief Address of the Control register 4
 */
 #define LIS3DH_CTRL_REG4 0x23  
-
-/**
-*   \brief Address of the Control register 4
-*/
-#define LIS3DH_INT1_SRC 0x31
 
 /**
 *   \brief Hex value to set normal mode at 100Hz to the accelerometer 
