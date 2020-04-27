@@ -9,11 +9,8 @@
 #include "I2C_Interface.h"
 #include "project.h"
 #include "stdio.h"
+#include "InterruptRoutines.h"
 
-/**
-*   \brief 7-bit I2C address of the slave device.
-*/
-#define LIS3DH_DEVICE_ADDRESS 0x18
 
 /**
 *   \brief Address of the WHO AM I register
@@ -21,19 +18,9 @@
 #define LIS3DH_WHO_AM_I_REG_ADDR 0x0F
 
 /**
-*   \brief Address of the Status register
-*/
-#define LIS3DH_STATUS_REG 0x27
-
-/**
 *   \brief Address of the Control register 1
 */
 #define LIS3DH_CTRL_REG1 0x20   
-
-/**
-*   \brief Hex value to set normal mode at 100Hz to the accelerometer
-*/
-#define LIS3DH_NORMAL_MODE_CTRL_REG1 0x57  
 
 /**
 *   \brief Address of the Control register 4
@@ -41,10 +28,19 @@
 #define LIS3DH_CTRL_REG4 0x23  
 
 /**
-*   \brief Hex value to set the +/-2.0g FSR (which is the default value)
+*   \brief Address of the Control register 4
+*/
+#define LIS3DH_INT1_SRC 0x31
+
+/**
+*   \brief Hex value to set normal mode at 100Hz to the accelerometer 
+*/
+#define LIS3DH_NORMAL_MODE_CTRL_REG1 0x57  
+
+/**
+*   \brief Hex value to set the +/-2.0g FSR (which is the default value) 
 */
 #define LIS3DH_CTRL_REG4_DEFAULT 0x00   
-
 
 int main(void)
 {
@@ -55,9 +51,7 @@ int main(void)
     UART_Debug_Start();
     
     CyDelay(5); //"The boot procedure is complete about 5 milliseconds after device power-up."
-    
-    // String to print out messages on the UART
-    char message[50];
+
 
     // Check which devices are present on the I2C bus
     for (int i = 0 ; i < 128; i++)
@@ -75,7 +69,8 @@ int main(void)
     /*            I2C Reading                 */
     /******************************************/
     
-    /* Read WHO AM I REGISTER register */
+    /* Read WHO AM I register */
+    
     uint8_t who_am_i_reg;
     ErrorCode error = I2C_Peripheral_ReadRegister(LIS3DH_DEVICE_ADDRESS,
                                                   LIS3DH_WHO_AM_I_REG_ADDR, 
@@ -90,13 +85,12 @@ int main(void)
         UART_Debug_PutString("Error occurred during I2C comm\r\n");   
     }
     
-    /*      I2C Reading Status Register       */
+    /* Read Status Register */
     
     uint8_t status_register; 
     error = I2C_Peripheral_ReadRegister(LIS3DH_DEVICE_ADDRESS,
                                         LIS3DH_STATUS_REG,
                                         &status_register);
-    
     if (error == NO_ERROR)
     {
         sprintf(message, "STATUS REGISTER: 0x%02X\r\n", status_register);
@@ -106,7 +100,7 @@ int main(void)
     {
         UART_Debug_PutString("Error occurred during I2C comm to read status register\r\n");   
     }
-    
+       
     /******************************************/
     /*        Read Control Register 1         */
     /******************************************/
@@ -202,11 +196,18 @@ int main(void)
             UART_Debug_PutString("Error occurred during I2C comm to read control register4\r\n");   
         }
     }
-        
+          
+    isr_MultiRead_StartEx(Custom_isr_MultiRead);
+    Timer_MultiRead_Start();
+    
+    DataBuffer[0] = 0xA0;
+    DataBuffer[TRANSMIT_BUFFER_SIZE-1] = 0xC0;
+          
     for(;;)
     {
-        
+
     }
 }
+
 
 /* [] END OF FILE */
