@@ -17,7 +17,7 @@
     #include "stdio.h"
     #include "project.h"
 
-    CY_ISR_PROTO(Custom_isr_MultiRead);  //initialize the isr occurrence flag 
+    CY_ISR_PROTO(Custom_isr_MultiRead);
     
     volatile uint8 ReadPacketFlag;
     

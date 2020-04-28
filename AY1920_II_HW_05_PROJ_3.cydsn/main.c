@@ -1,5 +1,5 @@
 /**
-* \brief Main source file 
+* \brief Main source file for the I2C-Master project.
 *
 * In this project we test the LIS3DH 3-Axis Accelerometer
 * output capabilities.
@@ -22,6 +22,15 @@
 #define LIS3DH_DEVICE_ADDRESS 0x18
 
 /**
+*   \brief Address of the output lower register of the x axis. 
+*   
+*   the higher register of x axis and the higher and lower registers 
+*   of the y and z axis are adiacent to this one
+*/
+#define LIS3DH_OUT_X_L 0x28 
+
+//total number of output registers for the 3 axis
+/**
 *   \brief Address of the WHO AM I register
 */
 #define LIS3DH_WHO_AM_I_REG_ADDR 0x0F
@@ -37,23 +46,14 @@
 #define LIS3DH_CTRL_REG4 0x23  
 
 /**
-*   \brief Address of the output lower register of the x axis. 
-*   
-*   the higher register of x axis and the higher and lower registers 
-*   of the y and z axis are adiacent to this one 
-*   (6 output registers in total)
+*   \brief Hex value to set high resolution mode at 100Hz to the accelerometer 
 */
-#define LIS3DH_OUT_X_L 0x28 
+#define LIS3DH_HIGH_RES_MODE_CTRL_REG1 0x57  
 
 /**
-*   \brief Hex value to set normal mode at 100Hz to the accelerometer 
+*   \brief Hex value to set the +/-4.0g FSR
 */
-#define LIS3DH_NORMAL_MODE_CTRL_REG1 0x57  
-
-/**
-*   \brief Hex value to set the +/-2.0g FSR (which is the default value) 
-*/
-#define LIS3DH_CTRL_REG4_DEFAULT 0x00   
+#define LIS3DH_CTRL_REG4_HIGH_RES_MODE 0x18   
 
 int main(void)
 {
@@ -138,11 +138,11 @@ int main(void)
     /******************************************/
     
            
-    if (ctrl_reg1 != LIS3DH_NORMAL_MODE_CTRL_REG1)
+    if (ctrl_reg1 != LIS3DH_HIGH_RES_MODE_CTRL_REG1)
     {
         UART_Debug_PutString("Updating the register..\r\n");
         
-        ctrl_reg1 = LIS3DH_NORMAL_MODE_CTRL_REG1;
+        ctrl_reg1 = LIS3DH_HIGH_RES_MODE_CTRL_REG1;
     
         error = I2C_Peripheral_WriteRegister(LIS3DH_DEVICE_ADDRESS,
                                              LIS3DH_CTRL_REG1,
@@ -187,11 +187,11 @@ int main(void)
     /*            I2C Writing                 */
     /******************************************/
     
-    if (ctrl_reg4 != LIS3DH_CTRL_REG4_DEFAULT)
+    if (ctrl_reg4 != LIS3DH_CTRL_REG4_HIGH_RES_MODE)
     {
         UART_Debug_PutString("Updating the register..\r\n");
         
-        ctrl_reg4 = LIS3DH_CTRL_REG4_DEFAULT; // must be changed to the appropriate value
+        ctrl_reg4 = LIS3DH_CTRL_REG4_HIGH_RES_MODE; // must be changed to the appropriate value
 
         error = I2C_Peripheral_WriteRegister(LIS3DH_DEVICE_ADDRESS,
                                              LIS3DH_CTRL_REG4,
@@ -211,60 +211,64 @@ int main(void)
         }
     }
     
-    //number of registers we want to read (2 registers (=2byte) per each axis)
+        
+    //number of registers we want to read (2 registers per each axis)
     #define OUT_REG_NUMBER 6         
-    //total number of byte we want to send through the UART (header + axis values bytes + footer)
-    #define TRANSMIT_BUFFER_SIZE 1+ OUT_REG_NUMBER +1 
+    //total number of bytes we want to sent through the UART (header + axis values bytes*2 (=4) + footer)
+    #define TRANSMIT_BUFFER_SIZE 1+ OUT_REG_NUMBER*2 +1
+
     
-    //axis acceleration output data
-    uint8_t AxisData[OUT_REG_NUMBER];   
-    //buffer containing all the 3 axis outputs + header and footer
-    uint8_t DataBuffer[TRANSMIT_BUFFER_SIZE]; 
-    //right justified output casted at 16 bit
-    int16_t OutAxis;                             
+    uint8_t AxisData[OUT_REG_NUMBER];            //axis acceleration output data
+    uint8_t DataBuffer[TRANSMIT_BUFFER_SIZE];    //buffer containing all the 3 axis outputs + header and footer
+    int16_t OutAxis;                             //right justified output casted at 16 bit
 
     DataBuffer[0] = 0xA0;                        //header
     DataBuffer[TRANSMIT_BUFFER_SIZE-1] = 0xC0;   //footer
     
     Timer_MultiRead_Start();                     //start the Timer which triggers the interrupt on TC
     isr_MultiRead_StartEx(Custom_isr_MultiRead); //start the Timer isr
-    ReadPacketFlag = 0;                          //set to 0 the isr occurrence flag 
+    ReadPacketFlag = 0; 
     
+    
+    float Acc_ms2;                             //axis output in m/s^2
+    int32 Acc_mms2;
+        
     for(;;)
     {
-        if (ReadPacketFlag==1) //flag that goes high every time the isr occurs
+        if (ReadPacketFlag==1) 
         {   
             //read the status register
             ErrorCode error = I2C_Peripheral_ReadRegister(LIS3DH_DEVICE_ADDRESS,
-                                                  LIS3DH_STATUS_REG,
-                                                  &status_register);
+                                                          LIS3DH_STATUS_REG,
+                                                          &status_register);
             if (error == NO_ERROR)
             {
-                //to check if new acceleration data are available (if (ZYXDA==1))  
-                if (status_register & 0x08)     
+                if (status_register & 0x08)     //if (ZYXDA==1). To check if new data are available 
                 {   
-                //read the x, y, z axis output and store them in AxisData
+                //read the x, y, z axis output
                 error = I2C_Peripheral_ReadRegisterMulti(LIS3DH_DEVICE_ADDRESS,
                                                          LIS3DH_OUT_X_L,
                                                          OUT_REG_NUMBER,
                                                          &AxisData[0]);
                 if(error == NO_ERROR)
                 {
-                    /*
-                    *  in this cycle the buffer is filled with the 3 axis
-                    *  acceleration outputs converted into mg 
-                    */ 
-                    for (int i=0; i < OUT_REG_NUMBER; i += 2)
+                     for (int i=0; i < OUT_REG_NUMBER; i += 2)
                     {
-                        //trasforming the axis output in a right-justified 16-bit integer
-                        OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>6; 
-                        //converting the output value in mg (4 mg/digit)
-                        OutAxis *= 4;
-                        //storing the 16-bit int in 2 bytes of the buffer to send them through UART
-                        DataBuffer[i+1] = (uint8_t)(OutAxis >> 8);
-                        DataBuffer[i+2] = (uint8_t)(OutAxis & 0xFF);
+                        //trasforming the 3 axial outputs in 3 right-justified 16-bit integers
+                        OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>4; 
+                        //converting the output values in m/s^2 (for high resol. @ +/-4.0g we have 2 mg/digit)
+                        Acc_ms2 = (float) OutAxis * 2 * 9.806 * 0.001;
+                        //to keep 3 decimals of the acceleration value (Acc_ms2)
+                        Acc_mms2 = Acc_ms2 * 1000;
+                        //storing each axis data in 4 bytes to send them through UART 
+                      
+                        DataBuffer[i*2+1] = (uint8_t)(Acc_mms2 >> 24);
+                        DataBuffer[i*2+2] = (uint8_t)(Acc_mms2 >> 16);
+                        DataBuffer[i*2+3] = (uint8_t)(Acc_mms2 >> 8);
+                        DataBuffer[i*2+4] = (uint8_t)(Acc_mms2 & 0xFF);
+                      
                     }
-                    //the sample is sent through UART communication
+                    //the samples are sent through UART communication
                     UART_Debug_PutArray(DataBuffer, TRANSMIT_BUFFER_SIZE);
                     ReadPacketFlag=0;
                     }
