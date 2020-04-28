@@ -2,7 +2,12 @@
 * \brief Main source file 
 *
 * In this project we test the LIS3DH 3-Axis Accelerometer
-* output capabilities.
+* output capabilities. 
+*
+* The multiread of the axial output registers is triggered
+* by the timer ISR that occurs with a 100Hz frequency 
+* (same freq. of the registers updating)
+*
 */
 
 // Include required header files
@@ -248,22 +253,25 @@ int main(void)
                                                          LIS3DH_OUT_X_L,
                                                          OUT_REG_NUMBER,
                                                          &AxisData[0]);
-                if(error == NO_ERROR)
-                {
-                    /*
-                    *  in this cycle the buffer is filled with the 3 axis
-                    *  acceleration outputs converted into mg 
-                    */ 
-                    for (int i=0; i < OUT_REG_NUMBER; i += 2)
+                    if(error == NO_ERROR)
                     {
-                        //trasforming the axis output in a right-justified 16-bit integer
-                        OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>6; 
-                        //converting the output value in mg (4 mg/digit)
-                        OutAxis *= 4;
-                        //storing the 16-bit int in 2 bytes of the buffer to send them through UART
-                        DataBuffer[i+1] = (uint8_t)(OutAxis >> 8);
-                        DataBuffer[i+2] = (uint8_t)(OutAxis & 0xFF);
-                    }
+                        /*
+                        *  in this cycle we read the 3 axis acceleration 
+                        *  outputs and convert them into mg.
+                        *
+                        *  After that, in order to trasmit this int16-values through 
+                        *  UART they are splitted into 2 bytes and stored in a buffer.
+                        */
+                        for (int i=0; i < OUT_REG_NUMBER; i += 2)
+                        {
+                            //trasforming the axis output in a right-justified 16-bit integer
+                            OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>6; 
+                            //converting the output value in mg (4 mg/digit)
+                            OutAxis *= 4;
+                            //storing the 16-bit int in 2 bytes of the buffer to send them through UART
+                            DataBuffer[i+1] = (uint8_t)(OutAxis >> 8);
+                            DataBuffer[i+2] = (uint8_t)(OutAxis & 0xFF);
+                        }
                     //the sample is sent through UART communication
                     UART_Debug_PutArray(DataBuffer, TRANSMIT_BUFFER_SIZE);
                     ReadPacketFlag=0;

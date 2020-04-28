@@ -1,8 +1,12 @@
 /**
 * \brief Main source file for the I2C-Master project.
 *
-* In this project we test the LIS3DH 3-Axis Accelerometer
-* output capabilities.
+* In this project we read the LIS3DH 3-Axis Accelerometer
+* output and convert it into m/s^2. After that it is 
+* sent through UART (after being converted into mm/s^2).
+* The multiread of the axial output registers is triggered
+* by the timer ISR that occurs with a 100Hz frequency 
+* (same freq. of the registers updating).
 */
 
 // Include required header files
@@ -22,15 +26,6 @@
 #define LIS3DH_DEVICE_ADDRESS 0x18
 
 /**
-*   \brief Address of the output lower register of the x axis. 
-*   
-*   the higher register of x axis and the higher and lower registers 
-*   of the y and z axis are adiacent to this one
-*/
-#define LIS3DH_OUT_X_L 0x28 
-
-//total number of output registers for the 3 axis
-/**
 *   \brief Address of the WHO AM I register
 */
 #define LIS3DH_WHO_AM_I_REG_ADDR 0x0F
@@ -46,7 +41,15 @@
 #define LIS3DH_CTRL_REG4 0x23  
 
 /**
-*   \brief Hex value to set high resolution mode at 100Hz to the accelerometer 
+*   \brief Address of the output lower register of the x axis. 
+*   
+*   the higher register of x axis and the higher and lower registers 
+*   of the y and z axis are adiacent to this one
+*/
+#define LIS3DH_OUT_X_L 0x28 
+
+/**
+*   \brief Hex value to set high resolution mode at 100Hz  
 */
 #define LIS3DH_HIGH_RES_MODE_CTRL_REG1 0x57  
 
@@ -235,7 +238,7 @@ int main(void)
         
     for(;;)
     {
-        if (ReadPacketFlag==1) 
+        if (ReadPacketFlag==1)    //flag that goes high every time the isr occurs
         {   
             //read the status register
             ErrorCode error = I2C_Peripheral_ReadRegister(LIS3DH_DEVICE_ADDRESS,
@@ -250,24 +253,34 @@ int main(void)
                                                          LIS3DH_OUT_X_L,
                                                          OUT_REG_NUMBER,
                                                          &AxisData[0]);
-                if(error == NO_ERROR)
-                {
-                     for (int i=0; i < OUT_REG_NUMBER; i += 2)
+                    if(error == NO_ERROR)
                     {
-                        //trasforming the 3 axial outputs in 3 right-justified 16-bit integers
-                        OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>4; 
-                        //converting the output values in m/s^2 (for high resol. @ +/-4.0g we have 2 mg/digit)
-                        Acc_ms2 = (float) OutAxis * 2 * 9.806 * 0.001;
-                        //to keep 3 decimals of the acceleration value (Acc_ms2)
-                        Acc_mms2 = Acc_ms2 * 1000;
-                        //storing each axis data in 4 bytes to send them through UART 
-                      
-                        DataBuffer[i*2+1] = (uint8_t)(Acc_mms2 >> 24);
-                        DataBuffer[i*2+2] = (uint8_t)(Acc_mms2 >> 16);
-                        DataBuffer[i*2+3] = (uint8_t)(Acc_mms2 >> 8);
-                        DataBuffer[i*2+4] = (uint8_t)(Acc_mms2 & 0xFF);
-                      
-                    }
+                        /*
+                        *  in this cycle we read the 3 axis acceleration 
+                        *  outputs and convert them into m/s^2.
+                        *
+                        *  After that, in order to trasmit this value through UART 
+                        *  keeping 3 decimals without loosing information, 
+                        *  it is converted in mm/s^2 and casted into an 
+                        *  int32-variable. Then it is splitted 
+                        *  into 4 bytes that are sent through the UART.
+                        */
+                         for (int i=0; i < OUT_REG_NUMBER; i += 2)
+                        {
+                            //trasforming the 3 axial outputs in 3 right-justified 16-bit integers
+                            OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>4; 
+                            //converting the output values in m/s^2 (for high resol. @ +/-4.0g we have 2 mg/digit)
+                            Acc_ms2 = (float) OutAxis * 2 * 9.806 * 0.001;
+                            //to keep 3 decimals of the acceleration value (Acc_ms2)
+                            Acc_mms2 = Acc_ms2 * 1000;
+                            //storing each axis data in 4 bytes to send them through UART 
+                          
+                            DataBuffer[i*2+1] = (uint8_t)(Acc_mms2 >> 24);
+                            DataBuffer[i*2+2] = (uint8_t)(Acc_mms2 >> 16);
+                            DataBuffer[i*2+3] = (uint8_t)(Acc_mms2 >> 8);
+                            DataBuffer[i*2+4] = (uint8_t)(Acc_mms2 & 0xFF);
+                          
+                        }
                     //the samples are sent through UART communication
                     UART_Debug_PutArray(DataBuffer, TRANSMIT_BUFFER_SIZE);
                     ReadPacketFlag=0;

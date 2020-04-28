@@ -1,12 +1,8 @@
 /* ========================================
- *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
- *
+ * This interrupt occurs every 10ms in 
+ * order to trigger the read of the accelerometer
+ * output registers at the same frequency they
+ * update their values (100Hz)
  * ========================================
 */
 #include "InterruptRoutines.h"
