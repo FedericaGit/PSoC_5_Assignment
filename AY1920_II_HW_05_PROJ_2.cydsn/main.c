@@ -56,9 +56,9 @@
 #define LIS3DH_NORMAL_MODE_CTRL_REG1 0x57  
 
 /**
-*   \brief Hex value to set the +/-2.0g FSR (which is the default value) 
+*   \brief Hex value to set the +/-2.0g FSR (which is the default value). (BDU active)
 */
-#define LIS3DH_CTRL_REG4_DEFAULT 0x00   
+#define LIS3DH_CTRL_REG4_DEFAULT 0x80   
 
 int main(void)
 {

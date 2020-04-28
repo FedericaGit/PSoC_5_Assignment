@@ -54,9 +54,9 @@
 #define LIS3DH_HIGH_RES_MODE_CTRL_REG1 0x57  
 
 /**
-*   \brief Hex value to set the +/-4.0g FSR
+*   \brief Hex value to set the +/-4.0g FSR.(BDU active)
 */
-#define LIS3DH_CTRL_REG4_HIGH_RES_MODE 0x18   
+#define LIS3DH_CTRL_REG4_HIGH_RES_MODE 0x98   
 
 int main(void)
 {

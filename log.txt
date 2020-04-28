@@ -1,0 +1,65 @@
+commit 448f6bfbab2ca9c08450edbfe10b5222ea8ac696
+Author: Federica <fede.e3@hotmail.it>
+Date:   Tue Apr 28 16:31:59 2020 +0200
+
+    Added and adjusted some comments
+
+commit 02466d9eb475b21093abcde2efcdab98047fdc0a
+Author: Federica <fede.e3@hotmail.it>
+Date:   Tue Apr 28 15:58:59 2020 +0200
+
+    Added comments on the code of Project2 and Project3. Added comments on Project3 top design
+
+commit 9446a75cf6e1b41515a5cf0db0e574f709424ac6
+Author: Federica <fede.e3@hotmail.it>
+Date:   Tue Apr 28 15:07:24 2020 +0200
+
+    Project 2: moved some declarations from InterruptRoutines.h to the main. Project 3: set the registers. Collected and stored the 3 axial outputs
+
+commit 8268897f147eea06b6b249b001ca684cdd0f1d8c
+Author: Federica <fede.e3@hotmail.it>
+Date:   Mon Apr 27 22:20:35 2020 +0200
+
+    Move big part of the isr code in the main (in the for cycle) to speed up the isr
+
+commit 74f42490aa4e3cb9ccf928a8c3968717864488f0
+Author: Federica <fede.e3@hotmail.it>
+Date:   Mon Apr 27 20:01:42 2020 +0200
+
+    Deleted sprintf messages that slowed down the read of the axis values. Added comments on top design regarding Baud Rate and ISR
+
+commit 422889e1d02c8ed2299c7a77a7deaa5ab2f06dbd
+Author: Federica <fede.e3@hotmail.it>
+Date:   Mon Apr 27 16:24:45 2020 +0200
+
+    3 axial outputs converted into right-justified 16-bit integers, in mg scale
+
+commit a423e3c938a2eb4f809aade0ad8a90c6f9052ea0
+Author: Federica <fede.e3@hotmail.it>
+Date:   Mon Apr 27 12:29:25 2020 +0200
+
+    Implementation of an isr to read data at a constant rate (100Hz). Just a draft of UART communication.
+
+commit 4d667151874c38b16aba76acedb03c7ca6210fe2
+Author: Federica <fede.e3@hotmail.it>
+Date:   Sat Apr 25 11:22:02 2020 +0200
+
+    Project 1 completed and Project 2 control registers setting
+
+commit a1d019326635b209c16256e77252fbec34c5b710
+Author: Federica <fede.e3@hotmail.it>
+Date:   Wed Apr 22 18:19:36 2020 +0200
+
+    Added I2C Multi-read/write functions in I2C_Interface.c
+
+commit e9ca76c4b208f3963b14a6fedfc93e88846bd2ea
+Author: Federica <fede.e3@hotmail.it>
+Date:   Wed Apr 22 17:43:28 2020 +0200
+
+    My first commit
+
+commit 0d10ee0a6f221554636b2c212d1e8916176a6207
+Author: Federica <fede.e3@hotmail.it>
+Date:   Wed Apr 22 17:27:25 2020 +0200
+
+    My first commit
