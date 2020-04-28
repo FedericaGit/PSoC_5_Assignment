@@ -217,7 +217,7 @@ int main(void)
         
     //number of registers we want to read (2 registers per each axis)
     #define OUT_REG_NUMBER 6         
-    //total number of bytes we want to sent through the UART (header + axis values bytes*2 (=4) + footer)
+    //total number of bytes we want to send through the UART (header + axis value bytes*2 (=4) + footer)
     #define TRANSMIT_BUFFER_SIZE 1+ OUT_REG_NUMBER*2 +1
 
     
@@ -233,8 +233,8 @@ int main(void)
     ReadPacketFlag = 0; 
     
     
-    float Acc_ms2;                             //axis output in m/s^2
-    int32 Acc_mms2;
+    float Acc_ms2;                               //axis output in m/s^2
+    int32 Acc_mms2;                              //axis output in mm/s^2
         
     for(;;)
     {
@@ -271,7 +271,7 @@ int main(void)
                             OutAxis = (int16)((AxisData[i] | (AxisData[i+1]<<8)))>>4; 
                             //converting the output values in m/s^2 (for high resol. @ +/-4.0g we have 2 mg/digit)
                             Acc_ms2 = (float) OutAxis * 2 * 9.806 * 0.001;
-                            //to keep 3 decimals of the acceleration value (Acc_ms2)
+                            //to keep 3 decimals of the acceleration value (Acc_ms2) it is converted into mm/s^2
                             Acc_mms2 = Acc_ms2 * 1000;
                             //storing each axis data in 4 bytes to send them through UART 
                           
